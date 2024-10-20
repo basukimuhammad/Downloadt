@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Downloader</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .material-icons {
+            font-size: 24px;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .5
+            }
+        }
+
+        .hover-lift {
+            transition: transform 0.3s ease;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body class="p-4">
+
+<main class="container mx-auto glass-effect p-8 w-full max-w-4xl mt-10">
+    <h1 class="text-4xl md:text-5xl font-bold text-center mb-8 text-white">TikTok Downloader</h1>
+    <p class="text-center text-white mb-8">Download video dan foto TikTok favorit Anda dengan mudah!</p>
+
+    <form id="downloadForm" class="space-y-6 max-w-xl mx-auto">
+        <div class="relative">
+            <input type="text" id="url" name="url" placeholder="Masukkan URL TikTok"
+                   class="w-full p-4 pr-12 rounded-full bg-white bg-opacity-20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400">
+            <span class="material-icons absolute right-4 top-1/2 transform -translate-y-1/2 text-white animate-pulse">bolt</span>
+        </div>
+        <button type="submit"
+                class="w-full bg-purple-600 text-white py-3 px-6 rounded-full font-semibold hover:bg-purple-700 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-50 flex items-center justify-center hover-lift">
+            <span class="material-icons">download</span> Download
+        </button>
+    </form>
+
+    <div id="result" class="mt-6"></div>
+</main>
+
+<footer class="text-white text-center py-4 mt-10">
+    <p class="mb-2">Dibuat dengan ❤️ oleh <a href="https://github.com/BOTCAHX" target="_blank"
+                                            class="underline hover:text-purple-300 transition duration-300">BOTCAHX</a></p>
+    <a href="https://github.com/BOTCAHX/TikTokPy" target="_blank"
+       class="inline-flex items-center bg-white bg-opacity-20 px-4 py-2 rounded-full hover:bg-opacity-30 transition duration-300 hover-lift">
+        <span class="material-icons mr-2">code</span> Source Code
+    </a>
+</footer>
+
+<script>
+    $(document).ready(function () {
+        $('#downloadForm').on('submit', function (event) {
+            event.preventDefault();
+            const url = $('#url').val();
+            Swal.fire({
+                title: 'Mengambil data...',
+                text: 'Mohon tunggu, kami sedang mengambil detail konten.',
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                background: 'rgba(255, 255, 255, 0.8)',
+                backdrop: 'rgba(0, 0, 0, 0.4)',
+                customClass: {
+                    title: 'text-purple-600',
+                    content: 'text-gray-700'
+                }
+            });
+
+            // API endpoint yang digunakan
+            const apiUrl = `https://godownloader.com/api/tiktok-no-watermark-free?key=godownloader.com&url=${encodeURIComponent(url)}`;
+
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    Swal.close();
+                    // Memeriksa apakah data yang diterima valid
+                    if (data.video_no_watermark && data.music_url && data.desc) {
+                        let contentHtml = `
+                            <video controls class="w-full mb-4 rounded-lg shadow-lg max-w-full h-auto">
+                                <source src="${data.video_no_watermark}" type="video/mp4">
+                                Browser Anda tidak mendukung video tag.
+                            </video>
+                        `;
+
+                        Swal.fire({
+                            title: `<span class="text-sm font-semibold text-purple-600">${data.desc}</span>`,
+                            html: `
+                                ${contentHtml}
+                                <div class="flex flex-wrap justify-center gap-4 mt-4">
+                                    <button id="videoDownload" class="bg-yellow-500 text-white py-2 px-6 rounded-full hover:bg-yellow-600 transition duration-300 flex items-center hover-lift">
+                                        <span class="material-icons">videocam</span> Download Video
+                                    </button>
+                                    <button id="audioDownload" class="bg-purple-500 text-white py-2 px-6 rounded-full hover:bg-purple-600 transition duration-300 flex items-center hover-lift">
+                                        <span class="material-icons">audiotrack</span> Download Audio
+                                    </button>
+                                </div>
+                            `,
+                            showCloseButton: true,
+                            background: 'rgba(255, 255, 255, 0.9)',
+                            backdrop: 'rgba(0, 0, 0, 0.4)',
+                            customClass: {
+                                container: 'rounded-lg',
+                                popup: 'rounded-lg',
+                            }
+                        });
+
+                        $('#videoDownload').on('click', function () {
+                            window.location.href = data.video_no_watermark;
+                        });
+
+                        $('#audioDownload').on('click', function () {
+                            window.location.href = data.music_url;
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'Konten tidak ditemukan atau ada kesalahan!',
+                            background: 'rgba(255, 255, 255, 0.9)',
+                            backdrop: 'rgba(0, 0, 0, 0.4)'
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.close();
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Terjadi kesalahan saat mengambil data!',
+                        background: 'rgba(255, 255, 255, 0.9)',
+                        backdrop: 'rgba(0, 0, 0, 0.4)'
+                    });
+                });
+        });
+    });
+</script>
+
+</body>
+</html>
